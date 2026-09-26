@@ -10,6 +10,9 @@ import { streamChat } from '@/lib/gemini';
 import { sanitizeInput } from '@/lib/validators';
 import { getChatSystemPrompt } from '@/lib/prompts';
 
+// Allow up to 60 seconds on Vercel Serverless Functions for AI streaming responses
+export const maxDuration = 60;
+
 export async function POST(request) {
   try {
     const body = await request.json();

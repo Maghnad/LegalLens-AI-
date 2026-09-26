@@ -25,6 +25,9 @@ import {
 import { validateFile, sanitizeInput } from '@/lib/validators';
 import { extractFileContent } from '@/utils/fileHelpers';
 
+// Allow up to 60 seconds on Vercel Serverless Functions for AI document processing
+export const maxDuration = 60;
+
 export async function POST(request) {
   try {
     const formData = await request.formData();
