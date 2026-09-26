@@ -17,7 +17,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const message = sanitizeInput(body.message);
-    const history = body.history || [];
+    const history = Array.isArray(body.history) ? body.history : [];
     const documentContext = sanitizeInput(body.documentContext || '');
     const fileData = body.fileData || null;
     const fileMimeType = body.fileMimeType || null;
@@ -30,20 +30,22 @@ export async function POST(request) {
     }
 
     // Build the system prompt with document context
-    const systemPrompt = getChatSystemPrompt(documentContext || 'No specific document context provided. Answer legal questions generally.');
+    const systemInstruction = getChatSystemPrompt(
+      documentContext || 'No specific document context provided. Answer legal questions generally.'
+    );
 
-    // Build the chat messages
+    // Build the chat messages history
     const chatMessages = [
-      { role: 'user', content: systemPrompt },
-      { role: 'assistant', content: 'I understand. I\'m ready to help you analyze and understand your legal document. What would you like to know?' },
-      ...history.slice(0, -1).map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      })),
+      ...history
+        .filter((msg) => msg && msg.content && typeof msg.content === 'string')
+        .map((msg) => ({
+          role: msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user',
+          content: msg.content,
+        })),
       { role: 'user', content: message },
     ];
 
-    // Decode file data if provided
+    // Decode file buffer if provided
     let fileBuffer = null;
     if (fileData) {
       fileBuffer = Buffer.from(fileData, 'base64');
@@ -54,18 +56,23 @@ export async function POST(request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const generator = streamChat(chatMessages, fileBuffer, fileMimeType);
-          
+          const generator = streamChat(chatMessages, systemInstruction, fileBuffer, fileMimeType);
+
           for await (const chunk of generator) {
-            const data = `data: ${JSON.stringify({ text: chunk })}\n\n`;
-            controller.enqueue(encoder.encode(data));
+            if (chunk) {
+              const data = `data: ${JSON.stringify({ text: chunk })}\n\n`;
+              controller.enqueue(encoder.encode(data));
+            }
           }
 
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
         } catch (error) {
-          console.error('Stream error:', error);
-          const errorData = `data: ${JSON.stringify({ error: 'Stream interrupted' })}\n\n`;
+          console.error('Chat stream error:', error);
+          const userErrorMessage = error?.message?.includes('API key')
+            ? 'Gemini API key is invalid or not configured.'
+            : 'AI service experienced a temporary error. Please try again.';
+          const errorData = `data: ${JSON.stringify({ error: userErrorMessage })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
           controller.close();
         }
@@ -74,17 +81,20 @@ export async function POST(request) {
 
     return new Response(stream, {
       headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
       },
     });
-
   } catch (error) {
-    console.error('Chat error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to process chat message' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('Chat route error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message || 'Failed to process chat message' }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 }
