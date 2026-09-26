@@ -1,69 +1,93 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from 'next/link';
+import Footer from '@/components/layout/Footer';
 
-export default function Home() {
+export default function HomePage() {
+  const features = [
+    {
+      href: '/analyze',
+      icon: '📄',
+      title: 'Document Simplification & Reading Levels',
+      description: 'Convert dense legal text into plain English at adjustable reading levels (5th Grade, General Adult, Legal Expert) with glossary tooltips.',
+    },
+    {
+      href: '/analyze',
+      icon: '🔍',
+      title: 'Risk & Obligation Analysis',
+      description: 'Automatically identify risks, obligations, rights, deadlines, and red flags in your contracts and agreements.',
+    },
+    {
+      href: '/analyze',
+      icon: '💬',
+      title: 'Negotiation & Balanced Redlines',
+      description: 'Get editable, fair replacement clauses and persuasive talking point scripts with fallback positions to level the playing field.',
+    },
+    {
+      href: '/compare',
+      icon: '⚖️',
+      title: 'Contract Comparison',
+      description: 'Upload two documents side by side and see exactly what changed — additions, removals, and modifications highlighted clearly.',
+    },
+    {
+      href: '/chat',
+      icon: '🤖',
+      title: 'Document Q&A Chat (RAG)',
+      description: 'Ask questions about your legal documents and get instant, context-aware answers grounded in the document content.',
+    },
+    {
+      href: '/analyze',
+      icon: '📅',
+      title: 'Checklists & Calendar Export (.ics)',
+      description: 'Actionable before/after signing checklists with 1-click .ics calendar export for all critical milestones and deadlines.',
+    },
+  ];
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.js</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main>
+      {/* Hero Section */}
+      <section className="hero">
+        <div className="hero__badge">
+          <span>⚡</span>
+          Powered by Google Gemini AI
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <h1 className="hero__title">
+          Understand Legal Documents with Confidence
+        </h1>
+        <p className="hero__subtitle">
+          LegalLens AI helps you simplify complex legal documents, identify risks, compare contracts, 
+          and prepare for legal consultations — all powered by advanced AI.
+        </p>
+        <div className="hero__actions">
+          <Link href="/analyze" className="btn btn--primary btn--lg" id="cta-analyze">
+            📄 Analyze a Document
+          </Link>
+          <Link href="/chat" className="btn btn--secondary btn--lg" id="cta-chat">
+            💬 Chat with a Document
+          </Link>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Features Grid */}
+      <section aria-label="Features">
+        <div className="features-grid">
+          {features.map((feature, index) => (
+            <Link
+              key={index}
+              href={feature.href}
+              className="feature-card"
+              id={`feature-${index}`}
+            >
+              <div className="feature-card__icon">{feature.icon}</div>
+              <h2 className="feature-card__title">{feature.title}</h2>
+              <p className="feature-card__description">{feature.description}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Disclaimer */}
+      <div style={{ marginTop: 'var(--space-3xl)' }}>
+        <Footer />
+      </div>
+    </main>
   );
 }
